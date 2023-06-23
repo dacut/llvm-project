@@ -235,7 +235,7 @@ XtensaMCCodeEmitter::getLoopTargetEncoding(const MCInst &MI, unsigned int OpNum,
   if (MO.isImm())
     return static_cast<uint32_t>(MO.getImm());
 
-  assert((MO.isExpr()) && "Unexpected operand value!");
+  assert((MO.isExpr()) && "Unexpected operand value! (getLoopTargetEncoding)");
 
   const MCExpr *Expr = MO.getExpr();
 
@@ -252,13 +252,13 @@ XtensaMCCodeEmitter::getCallEncoding(const MCInst &MI, unsigned int OpNum,
   if (MO.isImm()) {
     int32_t Res = MO.getImm();
     if (Res & 0x3) {
-      llvm_unreachable("Unexpected operand value!");
+      llvm_unreachable("Unexpected operand value! (getCallEncoding1)");
     }
     Res >>= 2;
     return Res;
   }
 
-  assert((MO.isExpr()) && "Unexpected operand value!");
+  assert((MO.isExpr()) && "Unexpected operand value! (getCallEncoding2)");
   const MCExpr *Expr = MO.getExpr();
   Fixups.push_back(MCFixup::create(
       0, Expr, MCFixupKind(Xtensa::fixup_xtensa_call_18), MI.getLoc()));
@@ -278,7 +278,7 @@ XtensaMCCodeEmitter::getL32RTargetEncoding(const MCInst &MI, unsigned OpNum,
     return Res;
   }
 
-  assert((MO.isExpr()) && "Unexpected operand value!");
+  assert((MO.isExpr()) && "Unexpected operand value! (getL32RTargetEncoding)");
 
   Fixups.push_back(MCFixup::create(
       0, MO.getExpr(), MCFixupKind(Xtensa::fixup_xtensa_l32r_16), MI.getLoc()));
@@ -298,7 +298,7 @@ XtensaMCCodeEmitter::getMemRegEncoding(const MCInst &MI, unsigned OpNo,
   case Xtensa::L16SI:
   case Xtensa::L16UI:
     if (Res & 0x1) {
-      report_fatal_error("Unexpected operand value!");
+      report_fatal_error("Unexpected operand value! (getMemRegEncoding1)");
     }
     Res >>= 1;
     break;
@@ -312,7 +312,10 @@ XtensaMCCodeEmitter::getMemRegEncoding(const MCInst &MI, unsigned OpNo,
   case Xtensa::LSIP:
   case Xtensa::S32C1I:
     if (Res & 0x3) {
-      report_fatal_error("Unexpected operand value!");
+      char buf[256];
+      MI.dump();
+      snprintf(buf, 256, "Unexpected operand value! getMemRegEncoding2: opcode=%u, Res=0x%x", MI.getOpcode(), Res);
+      report_fatal_error(buf);
     }
     Res >>= 2;
     break;
@@ -321,10 +324,10 @@ XtensaMCCodeEmitter::getMemRegEncoding(const MCInst &MI, unsigned OpNo,
   switch (MI.getOpcode()) {
   case Xtensa::S32I_N:
   case Xtensa::L32I_N:
-    assert((isUInt<4>(Res)) && "Unexpected operand value!");
+    assert((isUInt<4>(Res)) && "Unexpected operand value! (getMemRegEncoding3)");
     break;
   default:
-    assert((isUInt<8>(Res)) && "Unexpected operand value!");
+    assert((isUInt<8>(Res)) && "Unexpected operand value! (getMemRegEncoding4)");
     break;
   }
 
@@ -340,7 +343,7 @@ uint32_t XtensaMCCodeEmitter::getImm8OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   int32_t Res = MO.getImm();
 
-  assert(((Res >= -128) && (Res <= 127)) && "Unexpected operand value!");
+  assert(((Res >= -128) && (Res <= 127)) && "Unexpected operand value! (getImm8OpValue)");
 
   return (Res & 0xff);
 }
@@ -353,7 +356,7 @@ XtensaMCCodeEmitter::getImm8_sh8OpValue(const MCInst &MI, unsigned OpNo,
   int32_t Res = MO.getImm();
 
   assert(((Res >= -32768) && (Res <= 32512) && ((Res & 0xff) == 0)) &&
-         "Unexpected operand value!");
+         "Unexpected operand value! (getImm8_sh8OpValue)");
 
   return (Res & 0xffff);
 }
@@ -365,7 +368,7 @@ XtensaMCCodeEmitter::getImm12OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   int32_t Res = MO.getImm();
 
-  assert(((Res >= -2048) && (Res <= 2047)) && "Unexpected operand value!");
+  assert(((Res >= -2048) && (Res <= 2047)) && "Unexpected operand value! (getImm12OpValue)");
 
   return (Res & 0xfff);
 }
@@ -377,7 +380,7 @@ XtensaMCCodeEmitter::getUimm4OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   uint32_t Res = static_cast<uint32_t>(MO.getImm());
 
-  assert((Res <= 15) && "Unexpected operand value!");
+  assert((Res <= 15) && "Unexpected operand value! (getUimm4OpValue)");
 
   return Res & 0xf;
 }
@@ -389,7 +392,7 @@ XtensaMCCodeEmitter::getUimm5OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   uint32_t Res = static_cast<uint32_t>(MO.getImm());
 
-  assert((Res <= 31) && "Unexpected operand value!");
+  assert((Res <= 31) && "Unexpected operand value! (getUimm5OpValue)");
 
   return (Res & 0x1f);
 }
@@ -401,7 +404,7 @@ XtensaMCCodeEmitter::getShimm1_31OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   uint32_t Res = static_cast<uint32_t>(MO.getImm());
 
-  assert(((Res >= 1) && (Res <= 31)) && "Unexpected operand value!");
+  assert(((Res >= 1) && (Res <= 31)) && "Unexpected operand value! (getShimm1_31OpValue)");
 
   return ((32 - Res) & 0x1f);
 }
@@ -413,7 +416,7 @@ XtensaMCCodeEmitter::getImm1_16OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   uint32_t Res = static_cast<uint32_t>(MO.getImm());
 
-  assert(((Res >= 1) && (Res <= 16)) && "Unexpected operand value!");
+  assert(((Res >= 1) && (Res <= 16)) && "Unexpected operand value! (getImm1_16OpValue)");
 
   return (Res - 1);
 }
@@ -426,7 +429,7 @@ XtensaMCCodeEmitter::getImm1n_15OpValue(const MCInst &MI, unsigned OpNo,
   int32_t Res = static_cast<int32_t>(MO.getImm());
 
   assert(((Res >= -1) && (Res <= 15) && (Res != 0)) &&
-         "Unexpected operand value!");
+         "Unexpected operand value! (getImm1n_15OpValue))");
 
   if (Res < 0)
     Res = 0;
@@ -441,7 +444,7 @@ XtensaMCCodeEmitter::getImm32n_95OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   int32_t Res = static_cast<int32_t>(MO.getImm());
 
-  assert(((Res >= -32) && (Res <= 95)) && "Unexpected operand value!");
+  assert(((Res >= -32) && (Res <= 95)) && "Unexpected operand value! (getImm32n_95OpValue)");
 
   return Res;
 }
@@ -453,7 +456,7 @@ XtensaMCCodeEmitter::getImm8n_7OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   int32_t Res = static_cast<int32_t>(MO.getImm());
 
-  assert(((Res >= -8) && (Res <= 7)) && "Unexpected operand value!");
+  assert(((Res >= -8) && (Res <= 7)) && "Unexpected operand value! (getImm8n_7OpValue)");
 
   if (Res < 0)
     return Res + 16;
@@ -469,7 +472,7 @@ XtensaMCCodeEmitter::getImm64n_4nOpValue(const MCInst &MI, unsigned OpNo,
   int32_t Res = static_cast<int32_t>(MO.getImm());
 
   assert(((Res >= -64) && (Res <= -4) && ((Res & 0x3) == 0)) &&
-         "Unexpected operand value!");
+         "Unexpected operand value! (getImm64n_4nOpValue))");
 
   return Res & 0x3f;
 }
@@ -481,7 +484,7 @@ XtensaMCCodeEmitter::getEntry_Imm12OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   uint32_t res = static_cast<uint32_t>(MO.getImm());
 
-  assert(((res & 0x7) == 0) && "Unexpected operand value!");
+  assert(((res & 0x7) == 0) && "Unexpected operand value! (getEntry_Imm12OpValue)");
 
   return res;
 }
@@ -528,7 +531,7 @@ XtensaMCCodeEmitter::getB4constOpValue(const MCInst &MI, unsigned OpNo,
     Res = 15;
     break;
   default:
-    llvm_unreachable("Unexpected operand value!");
+    llvm_unreachable("Unexpected operand value! (getB4constOpValue)");
   }
 
   return Res;
@@ -578,7 +581,7 @@ XtensaMCCodeEmitter::getB4constuOpValue(const MCInst &MI, unsigned OpNo,
     Res = 15;
     break;
   default:
-    llvm_unreachable("Unexpected operand value!");
+    llvm_unreachable("Unexpected operand value! (getB4constuOpValue)");
   }
 
   return Res;
@@ -592,7 +595,7 @@ XtensaMCCodeEmitter::getSeimm7_22OpValue(const MCInst &MI, unsigned OpNo,
   uint32_t res = static_cast<uint32_t>(MO.getImm());
 
   res -= 7;
-  assert(((res & 0xf) == res) && "Unexpected operand value!");
+  assert(((res & 0xf) == res) && "Unexpected operand value! (getSeimm7_22OpValue)");
 
   return res;
 }
@@ -604,7 +607,7 @@ XtensaMCCodeEmitter::getSelect_256OpValue(const MCInst &MI, unsigned OpNo,
   const MCOperand &MO = MI.getOperand(OpNo);
   uint32_t Res = static_cast<uint32_t>(MO.getImm());
 
-  assert(((Res >= 0) && (Res <= 255)) && "Unexpected operand value!");
+  assert(((Res >= 0) && (Res <= 255)) && "Unexpected operand value! (getSelect_256OpValue)");
 
   return Res;
 }
